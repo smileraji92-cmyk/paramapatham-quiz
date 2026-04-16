@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ta">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>பரமபதம் விளையாட்டு</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Sans Tamil', 'Latha', Arial, sans-serif;
+            background: #1a1a2e;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            position: relative;
+            width: 100vw;
+            min-height: 100vh;
+            padding: 20px;
+            background-image: url('snakes-ladders-board.jpg.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            opacity: 0.95;
+        }
+        
+        .game-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            pointer-events: none;
+        }
+
+        .title {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 20px 40px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            margin: 20px auto;
+            max-width: 600px;
+        }
+
+        .title h1 {
+            font-size: 2.5em;
+            color: #d32f2f;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .buttons-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 25px;
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .number-btn {
+            width: 100px;
+            height: 100px;
+            font-size: 2.5em;
+            font-weight: bold;
+            border: 4px solid #333;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+            color: #333;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .number-btn:nth-child(4n+1) { background: rgba(255, 255, 255, 0.95); }
+        .number-btn:nth-child(4n+2) { background: rgba(255, 255, 255, 0.95); }
+        .number-btn:nth-child(4n+3) { background: rgba(255, 255, 255, 0.95); }
+        .number-btn:nth-child(4n) { background: rgba(255, 255, 255, 0.95); }
+
+        .number-btn:hover:not(.answered) {
+            transform: scale(1.1);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .number-btn.answered {
+            background: #666 !important;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 40px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .question-text {
+            font-size: 1.8em;
+            color: #fff;
+            margin-bottom: 30px;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .answer-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .answer-btn {
+            padding: 15px 40px;
+            font-size: 1.5em;
+            font-weight: bold;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .correct-btn {
+            background: linear-gradient(135deg, #11998e, #38ef7d);
+            color: #fff;
+        }
+
+        .wrong-btn {
+            background: linear-gradient(135deg, #ee0979, #ff6a00);
+            color: #fff;
+        }
+
+        .answer-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .feedback {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2000;
+            text-align: center;
+        }
+
+        .feedback.active {
+            display: block;
+        }
+
+        .feedback-message {
+            font-size: 3em;
+            color: #fff;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 30px 60px;
+            border-radius: 20px;
+            animation: fadeInOut 2s ease;
+        }
+
+        @keyframes fadeInOut {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 1; }
+        }
+
+        .balloon {
+            position: fixed;
+            bottom: -100px;
+            font-size: 4em;
+            animation: floatUp 3s ease-in-out;
+            z-index: 1500;
+        }
+
+        @keyframes floatUp {
+            0% {
+                bottom: -100px;
+                opacity: 1;
+            }
+            100% {
+                bottom: 120%;
+                opacity: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .title h1 {
+                font-size: 1.8em;
+            }
+            
+            .number-btn {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5em;
+            }
+            
+            .buttons-grid {
+                gap: 10px;
+                grid-template-columns: repeat(5, 1fr);
+            }
+            
+            .question-text {
+                font-size: 1.3em;
+            }
+            
+            .answer-btn {
+                padding: 12px 30px;
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="title">
+            <h1>பரமபதம் விளையாட்டு</h1>
+        </div>
+
+        <div class="buttons-grid" id="buttonsGrid"></div>
+    </div>
+
+    <div class="modal" id="questionModal">
+        <div class="modal-content">
+            <div class="question-text" id="questionText"></div>
+            <div class="answer-buttons">
+                <button class="answer-btn correct-btn" onclick="handleAnswer(true)">சரி</button>
+                <button class="answer-btn wrong-btn" onclick="handleAnswer(false)">தவறு</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="feedback" id="feedback">
+        <div class="feedback-message" id="feedbackMessage"></div>
+    </div>
+
+    <script>
+        const questions = [
+            '"சிங்கப்பூர்" என்ற பெயரின் பொருள் என்ன?',
+            'பழைய காலத்தில் சிங்கப்பூர் எப்படிப் பெயரிட்டு அழைக்கப்பட்டது?',
+            'கதை/புராணம் படி "சிங்கப்பூர்" என்று பெயரிட்டவர் யார்?',
+            '1819 ஆம் ஆண்டு சிங்கப்பூரை வர்த்தக நிலையமாக அமைக்க ஆங்கிலேய அதிகாரி யார்?',
+            'சிங்கப்பூர் சுதந்திரம் பெற்ற ஆண்டு எது?',
+            'சிங்கப்பூர் தேசிய தினம் எப்போது?',
+            'சிங்கப்பூரின் முதல் பிரதமர் யார்?',
+            'சிங்கப்பூரின் தேசிய கீதத்தின் பெயர் என்ன?',
+            '"மஜுலா சிங்கப்பூரா" கீதத்தை இயற்றியவர் (இசையமைப்பாளர்) யார்?',
+            'சிங்கப்பூர் கொடியின் நிறங்கள் என்ன?',
+            'சிங்கப்பூர் கொடியில் மொத்தம் எத்தனை நட்சத்திரங்கள் உள்ளன?',
+            'சிங்கப்பூர் கொடியில் மொத்தம் எத்தனை நட்சத்திரங்கள் உள்ளன?',
+            'சிங்கப்பூர் கொடியில் உள்ள பிறைச் சந்திரன் பொதுவாக எதைக் குறிக்கிறது?',
+            'சிங்கப்பூர் கொடியில் எத்தனை கிடைமட்ட பகுதிகள் உள்ளன?',
+            'சிங்கப்பூர் கொடியில் உள்ள பிறைச் சந்திரன் பொதுவாக எதைக் குறிக்கிறது?',
+            'சிங்கப்பூர் கொடியில் எத்தனை கிடைமட்ட பகுதிகள் உள்ளன?',
+            'சிங்கப்பூரின் தேசிய மலர் என்ன?',
+            'சிங்கப்பூரின் தேசிய மொழி என்ன?',
+            'சிங்கப்பூரின் நாணயம் என்ன?',
+            'மெர்லயன் என்றால் என்ன?',
+            'மெர்லயன் உருவத்தில் எந்த இரண்டு அம்சங்கள் உள்ளன?',
+            'மெர்லயன் சின்னம் சிங்கப்பூரின் எந்த இரண்டு பின்னணிகளை நினைவூட்டுகிறது?',
+            '"தேசிய நாள் பேரணி" (National Day Parade) எதற்காக நடத்தப்படுகிறது?',
+            'சிங்கப்பூரின் முதல் அரசுத் தலைவர் (President) யார்?',
+            'சிங்கப்பூர் ஆட்சித் தன்னாட்சி (Self-Government) பெற்ற ஆண்டு எது?'
+        ];
+
+        let currentQuestion = null;
+        let answeredQuestions = new Set();
+
+        function initGame() {
+            const grid = document.getElementById('buttonsGrid');
+            for (let i = 1; i <= 25; i++) {
+                const btn = document.createElement('button');
+                btn.className = 'number-btn';
+                btn.textContent = i;
+                btn.onclick = () => showQuestion(i);
+                btn.id = `btn-${i}`;
+                grid.appendChild(btn);
+            }
+        }
+
+        function showQuestion(number) {
+            if (answeredQuestions.has(number)) return;
+            
+            currentQuestion = number;
+            const questionText = questions[number - 1];
+            document.getElementById('questionText').textContent = questionText;
+            document.getElementById('questionModal').classList.add('active');
+        }
+
+        function handleAnswer(isCorrect) {
+            document.getElementById('questionModal').classList.remove('active');
+            
+            if (isCorrect) {
+                showBalloons();
+                markAsAnswered();
+            } else {
+                showFeedback('உன்னால் முடியும்!');
+            }
+        }
+
+        function showBalloons() {
+            const balloonEmojis = ['🎈', '🎉', '🎊', '✨', '🌟', '💫'];
+            const colors = ['#ff6b6b', '#4ecdc4', '#f7b731', '#5f27cd', '#38ef7d', '#ee0979'];
+            
+            for (let i = 0; i < 15; i++) {
+                setTimeout(() => {
+                    const balloon = document.createElement('div');
+                    balloon.className = 'balloon';
+                    balloon.textContent = balloonEmojis[Math.floor(Math.random() * balloonEmojis.length)];
+                    balloon.style.left = Math.random() * 100 + '%';
+                    balloon.style.color = colors[Math.floor(Math.random() * colors.length)];
+                    document.body.appendChild(balloon);
+                    
+                    setTimeout(() => balloon.remove(), 3000);
+                }, i * 100);
+            }
+            
+            markAsAnswered();
+        }
+
+        function showFeedback(message) {
+            const feedback = document.getElementById('feedback');
+            const feedbackMessage = document.getElementById('feedbackMessage');
+            feedbackMessage.textContent = message;
+            feedback.classList.add('active');
+            
+            setTimeout(() => {
+                feedback.classList.remove('active');
+            }, 2000);
+        }
+
+        function markAsAnswered() {
+            answeredQuestions.add(currentQuestion);
+            const btn = document.getElementById(`btn-${currentQuestion}`);
+            btn.classList.add('answered');
+        }
+
+        initGame();
+    </script>
+</body>
+</html>
